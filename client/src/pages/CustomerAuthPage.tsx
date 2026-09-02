@@ -12,11 +12,20 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function CustomerAuthPage() {
   const [, setLocation] = useLocation();
-  const { login, register, sendOtp, verifyOtp } = useAuth();
+  const { login, register, sendOtp, verifyOtp, resetPassword } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('login');
+
+  // استعادة كلمة المرور
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPhone, setForgotPhone] = useState('');
+  const [forgotStep, setForgotStep] = useState(1);
+  const [forgotCode, setForgotCode] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotWhatsappUrl, setForgotWhatsappUrl] = useState('');
+  const [forgotDemoCode, setForgotDemoCode] = useState('');
 
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -239,6 +248,78 @@ export default function CustomerAuthPage() {
     }
   };
 
+  const handleStartForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotPhone.trim()) {
+      setError('يرجى إدخال رقم الهاتف المسجل');
+      return;
+    }
+    const phoneError = validateYemeniPhone(forgotPhone);
+    if (phoneError) {
+      setError(phoneError);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await sendOtp(forgotPhone.trim(), 'reset');
+      if (res.success) {
+        if (res.whatsappUrl) setForgotWhatsappUrl(res.whatsappUrl);
+        if (res.otpCode) {
+          setForgotDemoCode(res.otpCode);
+          setForgotCode(res.otpCode);
+        }
+        setForgotStep(2);
+        toast({
+          title: 'رمز الاستعادة 💬',
+          description: 'تم إرسال رمز التحقق لإعادة تعيين كلمة المرور'
+        });
+      } else {
+        setError(res.message || 'رقم الهاتف غير مسجل أو تعذر إرسال الرمز');
+      }
+    } catch {
+      setError('حدث خطأ أثناء إرسال رمز الاستعادة');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinalForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotCode.trim() || forgotCode.trim().length < 4) {
+      setError('يرجى إدخال رمز التحقق المكون من 4 أرقام');
+      return;
+    }
+    if (!forgotNewPassword || forgotNewPassword.length < 3) {
+      setError('كلمة المرور الجديدة يجب أن لا تقل عن 3 أحرف');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await resetPassword(forgotPhone.trim(), forgotCode.trim(), forgotNewPassword);
+      if (res.success) {
+        toast({
+          title: 'تم تغيير كلمة المرور بنجاح 🎉',
+          description: 'يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة'
+        });
+        setShowForgotPassword(false);
+        setForgotStep(1);
+        setLoginIdentifier(forgotPhone.trim());
+        setForgotPhone('');
+        setForgotCode('');
+        setForgotNewPassword('');
+        setActiveTab('login');
+      } else {
+        setError(res.message || 'فشل في إعادة تعيين كلمة المرور');
+      }
+    } catch {
+      setError('حدث خطأ أثناء تغيير كلمة المرور');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 py-12" dir="rtl">
       <div className="mb-8 text-center">
@@ -261,7 +342,118 @@ export default function CustomerAuthPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="bg-white px-8 pb-10">
-          <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setShowOtpStep(false); setError(''); }} className="w-full">
+          {showForgotPassword ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-black text-gray-900">استعادة كلمة المرور</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotStep(1);
+                    setError('');
+                  }}
+                  className="font-bold text-muted-foreground"
+                >
+                  العودة للدخول
+                </Button>
+              </div>
+
+              {error && (
+                <Alert variant="destructive" className="mb-4 rounded-xl border-2">
+                  <AlertDescription className="font-bold">{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {forgotStep === 1 ? (
+                <form onSubmit={handleStartForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-phone" className="font-bold">رقم الهاتف المسجل (9 أرقام)</Label>
+                    <div className="relative">
+                      <Phone className="absolute right-3 top-4 h-5 w-5 text-gray-400" />
+                      <Input
+                        id="forgot-phone"
+                        value={forgotPhone}
+                        onChange={(e) => setForgotPhone(e.target.value)}
+                        placeholder="مثال: 771234567"
+                        required
+                        className="pr-10 h-14 rounded-xl border-gray-200 focus-visible:ring-primary focus-visible:border-primary transition-all text-lg"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full h-14 rounded-xl font-black text-xl mt-4 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all"
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 className="ml-2 h-5 w-5 animate-spin" /> : 'إرسال رمز الاستعادة'}
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleFinalForgotPassword} className="space-y-4">
+                  {forgotWhatsappUrl && (
+                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-3">
+                      <p className="text-sm font-bold text-emerald-800">يمكنك إرسال الرمز عبر واتساب مباشرة:</p>
+                      <a
+                        href={forgotWhatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md transition-all text-sm"
+                      >
+                        <MessageCircle className="h-5 w-5" />
+                        إرسال الرمز عبر واتساب
+                      </a>
+                    </div>
+                  )}
+
+                  {forgotDemoCode && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
+                      <p className="text-xs text-amber-800 font-bold">رمز التحقق التجريبي: <span className="text-lg font-black tracking-widest">{forgotDemoCode}</span></p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-code" className="font-bold">رمز التحقق (4 أرقام)</Label>
+                    <Input
+                      id="forgot-code"
+                      value={forgotCode}
+                      onChange={(e) => setForgotCode(e.target.value)}
+                      placeholder="1234"
+                      maxLength={4}
+                      required
+                      className="h-14 rounded-xl border-gray-200 text-center text-2xl font-black tracking-widest"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-new-pass" className="font-bold">كلمة المرور الجديدة</Label>
+                    <div className="relative">
+                      <Lock className="absolute right-3 top-4 h-5 w-5 text-gray-400" />
+                      <Input
+                        id="forgot-new-pass"
+                        type="password"
+                        value={forgotNewPassword}
+                        onChange={(e) => setForgotNewPassword(e.target.value)}
+                        placeholder="أدخل كلمة المرور الجديدة"
+                        required
+                        className="pr-10 h-14 rounded-xl border-gray-200 focus-visible:ring-primary focus-visible:border-primary transition-all text-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full h-14 rounded-xl font-black text-xl mt-4 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all"
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 className="ml-2 h-5 w-5 animate-spin" /> : 'تأكيد وتغيير كلمة المرور'}
+                  </Button>
+                </form>
+              )}
+            </div>
+          ) : (
+            <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setShowOtpStep(false); setError(''); }} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-10 bg-gray-100 p-1.5 rounded-2xl h-14">
               <TabsTrigger
                 value="login"
@@ -315,6 +507,18 @@ export default function CustomerAuthPage() {
                       className="pr-10 h-14 rounded-xl border-gray-200 focus-visible:ring-primary focus-visible:border-primary transition-all text-lg"
                     />
                   </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(true);
+                        setError('');
+                      }}
+                      className="text-sm font-bold text-primary hover:underline"
+                    >
+                      نسيت كلمة المرور؟
+                    </button>
+                  </div>
                 </div>
                 <Button
                   type="submit"
@@ -337,7 +541,9 @@ export default function CustomerAuthPage() {
                     variant="outline"
                     onClick={() => {
                       localStorage.setItem('is_guest', 'true');
-                      window.location.reload();
+                      localStorage.removeItem('auth_token');
+                      localStorage.removeItem('customer_phone');
+                      window.location.href = '/';
                     }}
                     className="w-full h-14 rounded-xl font-black text-xl border-2 hover:bg-gray-50 transition-all active:scale-95"
                   >
@@ -535,6 +741,7 @@ export default function CustomerAuthPage() {
               )}
             </TabsContent>
           </Tabs>
+          )}
         </CardContent>
       </Card>
 

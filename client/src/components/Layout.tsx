@@ -57,8 +57,13 @@ export default function Layout({ children }: LayoutProps) {
 
   const getS = (key: string, defaultValue: string) => getSetting(key) || defaultValue;
 
-  const whatsappLink = getS('support_whatsapp', 'https://wa.me/966000000000');
-  const phoneLink = getS('support_phone', 'tel:+966000000000');
+  const rawSupportWhatsapp = getS('support_whatsapp', getS('about_app_whatsapp', '966500000000'));
+  const cleanedWa = rawSupportWhatsapp.replace(/[^0-9]/g, '');
+  const whatsappLink = rawSupportWhatsapp.startsWith('http') ? rawSupportWhatsapp : (cleanedWa ? `https://wa.me/${cleanedWa}` : 'https://wa.me/966000000000');
+
+  const rawSupportPhone = getS('support_phone', getS('contact_phone', '966500000000'));
+  const cleanedPhone = rawSupportPhone.replace(/[^0-9]/g, '');
+  const phoneLink = `tel:${cleanedPhone || '966000000000'}`;
   const shareText = getS('share_text', 'تسوق من السريع ون الآن!');
   const shareUrl = getS('share_url', window.location.origin);
   const headerLogoUrl = getS('header_logo_url', '');
@@ -272,7 +277,7 @@ export default function Layout({ children }: LayoutProps) {
               )}
               {showContactButton && (
                 <button
-                  onClick={() => window.open(whatsappLink, '_blank')}
+                  onClick={() => { setSupportOpen(true); setSidebarOpen(false); }}
                   className="flex-1 max-w-[180px] h-11 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#F05215] to-[#FF7840] text-white font-black text-sm shadow-md hover:shadow-lg transition-all"
                   data-testid="button-contact-support"
                 >

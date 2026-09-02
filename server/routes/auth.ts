@@ -354,6 +354,55 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
+// إعادة تعيين كلمة المرور عبر OTP
+router.post('/reset-password', async (req, res) => {
+  try {
+    const arabicToLatinDigits = (s: string) =>
+      s.replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+       .replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x06F0));
+
+    const rawPhone = req.body?.phone || '';
+    const rawCode = req.body?.code || '';
+    const rawNewPassword = req.body?.newPassword || '';
+
+    const phone = arabicToLatinDigits(String(rawPhone).trim()).replace(/\s+/g, '');
+    const code = arabicToLatinDigits(String(rawCode).trim());
+    const newPassword = String(rawNewPassword);
+
+    if (!phone || !code || !newPassword) {
+      return res.status(400).json({ success: false, message: 'رقم الهاتف، ورمز التحقق، وكلمة المرور الجديدة مطلوبة' });
+    }
+
+    if (newPassword.length < 3) {
+      return res.status(400).json({ success: false, message: 'كلمة المرور يجب أن لا تقل عن 3 أحرف' });
+    }
+
+    const user = await storage.getUserByPhone(phone);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'رقم الهاتف غير مسجل في النظام' });
+    }
+
+    const record = otpStore.get(phone);
+    if (!record || (!record.verified && record.code !== code)) {
+      return res.status(400).json({ success: false, message: 'رمز التحقق غير صحيح أو منتهي الصلاحية' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await storage.updateUser(user.id, { password: hashedPassword });
+    otpStore.delete(phone);
+
+    res.json({
+      success: true,
+      message: 'تم تغيير كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن.'
+    });
+  } catch (error) {
+    console.error('خطأ في إعادة تعيين كلمة المرور:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
 // تسجيل عميل جديد
 router.post('/register', async (req, res) => {
   try {

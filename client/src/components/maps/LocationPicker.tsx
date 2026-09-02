@@ -160,7 +160,7 @@ export default function LocationPicker({
         setGettingLocation(false);
       },
       (error) => {
-        console.error('Error getting location:', error);
+        console.error('Error getting location:', error.message || error.code || error);
         alert('فشل في الحصول على موقعك الحالي');
         setGettingLocation(false);
       },

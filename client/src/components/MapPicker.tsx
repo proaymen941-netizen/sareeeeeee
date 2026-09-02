@@ -49,7 +49,7 @@ export function MapPicker({ onLocationSelect, defaultLocation, className = '' }:
           setIsGettingLocation(false);
         },
         (error) => {
-          console.error('Error getting location:', error);
+          console.error('Error getting location:', error.message || error.code || error);
           alert('لا يمكن الحصول على موقعك الحالي. الرجاء اختيار موقع من القائمة.');
           setIsGettingLocation(false);
         }

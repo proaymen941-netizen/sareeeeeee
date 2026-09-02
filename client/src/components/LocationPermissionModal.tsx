@@ -54,7 +54,7 @@ export function LocationPermissionModal({ onPermissionGranted, onPermissionDenie
           setIsOpen(false);
         },
         (error) => {
-          console.error('Error getting location:', error);
+          console.error('Error getting location:', error.message || error.code || error);
           setPermissionStatus('denied');
           onPermissionDenied();
           setIsOpen(false);

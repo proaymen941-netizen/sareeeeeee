@@ -9,21 +9,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
-import { useUiSettings } from '@/context/UiSettingsContext';
-import { handlePhoneCall, handleWhatsApp } from '@/utils/contactUtils';
-import { MessageCircle } from 'lucide-react';
 
 export default function TrackOrdersPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { getSetting } = useUiSettings();
   const [searchOrderNumber, setSearchOrderNumber] = useState('');
   const [searchedOrder, setSearchedOrder] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
-
-  const supportPhone = getSetting('support_phone') || getSetting('about_app_phone') || '+967777777777';
-  const supportWhatsapp = getSetting('support_whatsapp') || getSetting('about_app_whatsapp') || '967777777777';
 
   // جلب الطلبات النشطة للعميل
   const { data: regularOrders = [], isLoading: loadingOrders } = useQuery<any[]>({
@@ -297,16 +290,16 @@ export default function TrackOrdersPage() {
           <div className="flex gap-3 relative z-10">
             <Button
               className="flex-1 rounded-2xl bg-white text-gray-900 font-black hover:bg-gray-100 h-11 text-xs gap-2"
-              onClick={() => handlePhoneCall(supportPhone)}
+              onClick={() => window.open('tel:+967771234567')}
             >
               <Phone className="h-3.5 w-3.5" />
               اتصال سريع
             </Button>
             <Button
               className="flex-1 rounded-2xl bg-[#25D366] text-white font-black hover:opacity-90 h-11 text-xs gap-2"
-              onClick={() => handleWhatsApp(supportWhatsapp)}
+              onClick={() => window.open('https://wa.me/967771234567')}
             >
-              <MessageCircle className="h-3.5 w-3.5" />
+              <User className="h-3.5 w-3.5" />
               واتساب
             </Button>
           </div>

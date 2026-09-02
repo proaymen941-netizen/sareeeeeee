@@ -27,7 +27,7 @@ export default function MenuItemCard({
 }: MenuItemCardProps) {
   const { addItem } = useCart();
   const { toast } = useToast();
-  const { user, isAuthenticated, requireAuth } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const { isOnline } = useNetworkStatus();
@@ -67,10 +67,6 @@ export default function MenuItemCard({
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!isAuthenticated) {
-      requireAuth('حفظ المنتجات في المفضلة');
-      return;
-    }
     toggleFavorite.mutate();
   };
 
@@ -83,12 +79,6 @@ export default function MenuItemCard({
       }
       return;
     }
-
-    if (!isAuthenticated) {
-      requireAuth('إضافة المنتج إلى السلة');
-      return;
-    }
-
     if (!isOnline) {
       toast({
         title: "لا يوجد اتصال بالإنترنت",

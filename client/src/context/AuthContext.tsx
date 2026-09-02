@@ -15,16 +15,17 @@ export interface AuthUser {
 // حالة المصادقة
 interface AuthState {
   isAuthenticated: boolean;
-  isGuest: boolean;
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  authModalOpen: boolean;
-  authModalAction: string;
 }
 
 // نوع السياق
 interface AuthContextType extends AuthState {
+  authModalOpen?: boolean;
+  authModalAction?: string;
+  openAuthModal?: (action?: string) => void;
+  closeAuthModal?: () => void;
   login: (identifier: string, password: string, userType?: 'customer' | 'driver' | 'admin') => Promise<{ success: boolean; message: string }>;
   register: (userData: any) => Promise<{ success: boolean; message: string }>;
   sendOtp: (phone: string, purpose?: string) => Promise<{
@@ -37,14 +38,8 @@ interface AuthContextType extends AuthState {
     disabled?: boolean;
   }>;
   verifyOtp: (phone: string, code: string) => Promise<{ success: boolean; message: string }>;
-  resetPassword: (phone: string, otpCode: string, newPassword: string) => Promise<{ success: boolean; message: string; user?: AuthUser; token?: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
-  continueAsGuest: () => void;
-  exitGuestMode: () => void;
-  openAuthModal: (actionName?: string) => void;
-  closeAuthModal: () => void;
-  requireAuth: (actionName?: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,15 +53,24 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>(() => ({
+  const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
-    isGuest: typeof window !== 'undefined' ? localStorage.getItem('is_guest') === 'true' : false,
     user: null,
     token: null,
     loading: true,
-    authModalOpen: false,
-    authModalAction: '',
-  }));
+  });
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalAction, setAuthModalAction] = useState('');
+
+  const openAuthModal = (action?: string) => {
+    setAuthModalAction(action || '');
+    setAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setAuthModalOpen(false);
+    setAuthModalAction('');
+  };
 
   // التحقق من الجلسة المحفوظة عند بدء التطبيق
   useEffect(() => {
@@ -79,12 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         await validateToken(token);
       } else {
-        const isGuestSaved = localStorage.getItem('is_guest') === 'true';
-        setAuthState(prev => ({ 
-          ...prev, 
-          loading: false,
-          isGuest: isGuestSaved,
-        }));
+        setAuthState(prev => ({ ...prev, loading: false }));
       }
     } catch (error) {
       console.error('خطأ في تهيئة المصادقة:', error);
@@ -108,15 +107,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (userData.user?.phone) {
           localStorage.setItem('customer_phone', userData.user.phone);
         }
-        localStorage.removeItem('is_guest');
-        setAuthState(prev => ({
-          ...prev,
+        setAuthState({
           isAuthenticated: true,
-          isGuest: false,
           user: userData.user,
           token: token,
           loading: false,
-        }));
+        });
       } else {
         clearAuthState();
       }
@@ -129,57 +125,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearAuthState = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('customer_phone');
-    const isGuestSaved = localStorage.getItem('is_guest') === 'true';
-    setAuthState(prev => ({
-      ...prev,
+    setAuthState({
       isAuthenticated: false,
-      isGuest: isGuestSaved,
       user: null,
       token: null,
       loading: false,
-    }));
-  };
-
-  const continueAsGuest = () => {
-    localStorage.setItem('is_guest', 'true');
-    setAuthState(prev => ({
-      ...prev,
-      isGuest: true,
-      isAuthenticated: false,
-      authModalOpen: false,
-    }));
-  };
-
-  const exitGuestMode = () => {
-    localStorage.removeItem('is_guest');
-    setAuthState(prev => ({
-      ...prev,
-      isGuest: false,
-    }));
-  };
-
-  const openAuthModal = (actionName?: string) => {
-    setAuthState(prev => ({
-      ...prev,
-      authModalOpen: true,
-      authModalAction: actionName || 'المتابعة',
-    }));
-  };
-
-  const closeAuthModal = () => {
-    setAuthState(prev => ({
-      ...prev,
-      authModalOpen: false,
-      authModalAction: '',
-    }));
-  };
-
-  const requireAuth = (actionName?: string): boolean => {
-    if (authState.isAuthenticated && authState.user) {
-      return true;
-    }
-    openAuthModal(actionName);
-    return false;
+    });
   };
 
   const login = async (
@@ -213,20 +164,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (response.ok && result.success) {
         localStorage.setItem('auth_token', result.token);
-        localStorage.removeItem('is_guest');
         // حفظ رقم الهاتف لاستخدامه في جلب الطلبات والإشعارات
         if (result.user?.phone) {
           localStorage.setItem('customer_phone', result.user.phone);
         }
-        setAuthState(prev => ({
-          ...prev,
+        setAuthState({
           isAuthenticated: true,
-          isGuest: false,
           user: result.user,
           token: result.token,
           loading: false,
-          authModalOpen: false,
-        }));
+        });
         return { success: true, message: result.message || 'تم تسجيل الدخول بنجاح' };
       } else {
         setAuthState(prev => ({ ...prev, loading: false }));
@@ -255,20 +202,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (response.ok && result.success) {
         localStorage.setItem('auth_token', result.token);
-        localStorage.removeItem('is_guest');
         // حفظ رقم الهاتف لاستخدامه في جلب الطلبات والإشعارات
         if (result.user?.phone) {
           localStorage.setItem('customer_phone', result.user.phone);
         }
-        setAuthState(prev => ({
-          ...prev,
+        setAuthState({
           isAuthenticated: true,
-          isGuest: false,
           user: result.user,
           token: result.token,
           loading: false,
-          authModalOpen: false,
-        }));
+        });
         return { success: true, message: result.message || 'تم إنشاء الحساب بنجاح' };
       } else {
         setAuthState(prev => ({ ...prev, loading: false }));
@@ -311,55 +254,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const resetPassword = async (
-    phone: string,
-    otpCode: string,
-    newPassword: string
-  ): Promise<{ success: boolean; message: string; user?: AuthUser; token?: string }> => {
-    try {
-      setAuthState(prev => ({ ...prev, loading: true }));
-
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ phone, otpCode, newPassword }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        if (result.token) {
-          localStorage.setItem('auth_token', result.token);
-          localStorage.removeItem('is_guest');
-          if (result.user?.phone) {
-            localStorage.setItem('customer_phone', result.user.phone);
-          }
-          setAuthState(prev => ({
-            ...prev,
-            isAuthenticated: true,
-            isGuest: false,
-            user: result.user,
-            token: result.token,
-            loading: false,
-            authModalOpen: false,
-          }));
-        } else {
-          setAuthState(prev => ({ ...prev, loading: false }));
-        }
-        return { success: true, message: result.message || 'تم تغيير كلمة المرور بنجاح', user: result.user, token: result.token };
-      } else {
-        setAuthState(prev => ({ ...prev, loading: false }));
-        return { success: false, message: result.message || 'فشل في تغيير كلمة المرور' };
-      }
-    } catch (error) {
-      console.error('خطأ في استعادة كلمة المرور:', error);
-      setAuthState(prev => ({ ...prev, loading: false }));
-      return { success: false, message: 'حدث خطأ غير متوقع أثناء الاتصال بالخادم' };
-    }
-  };
-
   const logout = async () => {
     try {
       const token = authState.token;
@@ -388,18 +282,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value: AuthContextType = {
     ...authState,
+    authModalOpen,
+    authModalAction,
+    openAuthModal,
+    closeAuthModal,
     login,
     register,
     sendOtp,
     verifyOtp,
-    resetPassword,
     logout,
     refreshUser,
-    continueAsGuest,
-    exitGuestMode,
-    openAuthModal,
-    closeAuthModal,
-    requireAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

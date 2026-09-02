@@ -2,7 +2,6 @@ import React, { createContext, useContext, useReducer, useEffect, useMemo } from
 import { MenuItem } from '../../../shared/schema.js';
 import { useToast } from '@/hooks/use-toast';
 import { useUiSettings } from './UiSettingsContext';
-import { useAuth } from './AuthContext';
 import { getAppStatus, canOrderFromRestaurant } from '../utils/restaurantHours';
 import { useQuery } from '@tanstack/react-query';
 import type { Restaurant } from '../../../shared/schema.js';
@@ -178,7 +177,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const { toast } = useToast();
   const { getSetting } = useUiSettings();
-  const { isAuthenticated, requireAuth } = useAuth();
 
   const appStatus = useMemo(() => {
     const openingTime = getSetting('opening_time') || '08:00';
@@ -216,12 +214,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addItem = async (item: MenuItem, restaurantId: string, restaurantName: string) => {
-    // 0. فحص تسجيل الدخول: منع الزوار من إضافة المنتجات للسلة
-    if (!isAuthenticated) {
-      requireAuth('إضافة منتج إلى السلة');
-      return;
-    }
-
     // 1. فحص حالة التطبيق العامة
     if (!appStatus.isOpen) {
       toast({

@@ -10,7 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/context/AuthContext';
-import { handleWhatsApp, handlePhoneCall } from '@/utils/contactUtils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +28,12 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const { user: currentUser, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setLocation('/auth');
+    }
+  }, [authLoading, isAuthenticated, setLocation]);
 
   const userId = currentUser?.id;
 
@@ -46,89 +51,6 @@ export default function Profile() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
-
-  // إذا كان المستخدم زائر (غير مسجل الدخول)
-  if (!authLoading && !isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-28" dir="rtl">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-primary/90 text-white p-6 pb-12 rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setLocation('/')}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all text-white"
-            >
-              <ArrowRight className="h-5 w-5" />
-            </button>
-            <h1 className="text-xl font-black">حساب الزائر</h1>
-          </div>
-          
-          <div className="mt-6 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-2xl font-black shadow-inner">
-              👤
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black">أهلاً بك كـ زائر</h2>
-                <Badge className="bg-white/20 text-white border-0 text-xs">تصفح فقط</Badge>
-              </div>
-              <p className="text-xs text-white/80 mt-1">سجل دخولك لتتمكن من الطلب وتتبع طلباتك</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-md mx-auto px-4 -mt-6 space-y-4">
-          <Card className="rounded-3xl border-0 shadow-xl overflow-hidden bg-white">
-            <CardContent className="p-6 text-center space-y-4">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-100 flex items-center justify-center text-primary">
-                <User className="h-7 w-7" />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-gray-900 mb-1">سجّل حسابك الآن</h3>
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  أنشئ حساباً جديداً أو سجّل دخولك لتتمكن من إضافة المنتجات للسلة، حفظ العناوين، وإتمام وتتبع طلباتك بسهولة.
-                </p>
-              </div>
-              <Button
-                onClick={() => setLocation('/auth')}
-                className="w-full h-12 rounded-2xl font-black text-base bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all"
-                data-testid="button-profile-login"
-              >
-                تسجيل الدخول / إنشاء حساب
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Quick Menu */}
-          <div className="space-y-2 pt-2">
-            <Button
-              variant="outline"
-              className="w-full h-14 p-4 justify-between rounded-2xl border-gray-100 hover:bg-gray-50 bg-white"
-              onClick={() => setLocation('/settings')}
-            >
-              <div className="flex items-center gap-3">
-                <Settings className="h-5 w-5 text-primary" />
-                <span className="font-bold text-gray-800 text-sm">الإعدادات العامة</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-gray-400 rotate-180" />
-            </Button>
-
-            <Button
-              variant="outline"
-              className="w-full h-14 p-4 justify-between rounded-2xl border-gray-100 hover:bg-gray-50 bg-white"
-              onClick={() => setLocation('/privacy')}
-            >
-              <div className="flex items-center gap-3">
-                <Shield className="h-5 w-5 text-primary" />
-                <span className="font-bold text-gray-800 text-sm">الشروط وسياسة الخصوصية</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-gray-400 rotate-180" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const fetchCurrentLocationAddress = async () => {
     if (!navigator.geolocation) {
@@ -285,7 +207,7 @@ export default function Profile() {
       path: '#',
       description: 'تواصل معنا عبر واتساب',
       testId: 'profile-whatsapp',
-      onClick: () => { handleWhatsApp(supportWhatsapp); }
+      onClick: () => { window.open(`https://wa.me/${supportWhatsapp.replace(/\D/g, '')}`, '_blank'); }
     }] : []),
     ...(supportPhone ? [{
       icon: Phone,
@@ -293,7 +215,7 @@ export default function Profile() {
       path: '#',
       description: 'اتصل برقم الدعم المباشر',
       testId: 'profile-call',
-      onClick: () => { handlePhoneCall(supportPhone); }
+      onClick: () => { window.open(`tel:${supportPhone}`, '_blank'); }
     }] : []),
     ...(shareUrl ? [{
       icon: Share2,

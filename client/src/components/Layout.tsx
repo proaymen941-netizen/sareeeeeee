@@ -15,10 +15,10 @@ import {
   MessageCircle,
   X,
   Globe,
-  Headphones,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import CartButton from './CartButton';
@@ -28,9 +28,7 @@ import { useLanguage } from '../context/LanguageContext';
 import TopBar from './TopBar';
 import Navbar from './Navbar';
 import AppClosedOverlay from './AppClosedOverlay';
-import ContactSupportModal from './ContactSupportModal';
 import { getAppStatus } from '../utils/restaurantHours';
-import { handleWhatsApp, handlePhoneCall } from '@/utils/contactUtils';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -274,11 +272,8 @@ export default function Layout({ children }: LayoutProps) {
               )}
               {showContactButton && (
                 <button
-                  onClick={() => {
-                    setSidebarOpen(false);
-                    setSupportOpen(true);
-                  }}
-                  className="flex-1 max-w-[180px] h-11 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#F05215] to-[#FF7840] text-white font-black text-sm shadow-md hover:shadow-lg transition-all active:scale-95"
+                  onClick={() => window.open(whatsappLink, '_blank')}
+                  className="flex-1 max-w-[180px] h-11 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#F05215] to-[#FF7840] text-white font-black text-sm shadow-md hover:shadow-lg transition-all"
                   data-testid="button-contact-support"
                 >
                   <MessageCircle className="h-4 w-4" />
@@ -322,15 +317,56 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Support Center Button */}
           <div className="relative -mt-8">
-            <button
-              onClick={() => setSupportOpen(true)}
-              className="flex flex-col items-center group"
-              data-testid="button-bottom-nav-support"
-            >
-              <div className="header-gradient text-white p-4 rounded-2xl shadow-lg shadow-primary/30 border-4 border-white transform transition-transform group-hover:scale-110 active:scale-95">
-                <MessageCircle className="h-7 w-7" />
-              </div>
-            </button>
+            <Dialog open={supportOpen} onOpenChange={setSupportOpen}>
+              <DialogTrigger asChild>
+                <button className="flex flex-col items-center group">
+                  <div className="header-gradient text-white p-4 rounded-2xl shadow-lg shadow-primary/30 border-4 border-white transform transition-transform group-hover:scale-110 active:scale-95">
+                    <MessageCircle className="h-7 w-7" />
+                  </div>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] rounded-t-[2.5rem] border-none shadow-2xl overflow-hidden p-0">
+                <DialogTitle className="sr-only">{supportTitle}</DialogTitle>
+                <DialogDescription className="sr-only">اختر وسيلة التواصل</DialogDescription>
+                <div className="h-32 header-gradient p-8 flex items-end">
+                  <h2 className="text-3xl font-black text-white italic tracking-tighter">{supportTitle}</h2>
+                </div>
+                <div className="p-8 space-y-4">
+                  <p className="text-gray-500 font-bold mb-6 text-center">اختر وسيلة التواصل المناسبة لك</p>
+                  <div className="grid gap-4">
+                    <Button
+                      variant="outline"
+                      className="h-20 flex items-center justify-between px-6 rounded-2xl border-2 border-orange-50 hover:bg-orange-50 hover:border-orange-200 group transition-all"
+                      onClick={() => { window.open(whatsappLink, '_blank'); setSupportOpen(false); }}
+                    >
+                      <div className="bg-orange-100 p-3 rounded-xl group-hover:bg-orange-200 transition-colors">
+                        <MessageCircle className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1 text-right mr-4">
+                        <p className="font-black text-xl text-gray-900">واتساب</p>
+                        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">تحدث مباشرة</p>
+                      </div>
+                      <ChevronLeft className="h-5 w-5 text-gray-300" />
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="h-20 flex items-center justify-between px-6 rounded-2xl border-2 border-blue-50 hover:bg-blue-50 hover:border-blue-200 group transition-all"
+                      onClick={() => { window.location.href = phoneLink; setSupportOpen(false); }}
+                    >
+                      <div className="bg-blue-100 p-3 rounded-xl group-hover:bg-blue-200 transition-colors">
+                        <PhoneCall className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div className="flex-1 text-right mr-4">
+                        <p className="font-black text-xl text-gray-900">اتصال</p>
+                        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">مكالمة فورية</p>
+                      </div>
+                      <ChevronLeft className="h-5 w-5 text-gray-300" />
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <button
@@ -377,12 +413,8 @@ export default function Layout({ children }: LayoutProps) {
               <button onClick={handleShare} className="p-2.5 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
                 <Share2 className="h-5 w-5 text-gray-600" />
               </button>
-              <button
-                onClick={() => setSupportOpen(true)}
-                className="p-2.5 bg-primary/10 hover:bg-primary/20 rounded-full transition-colors text-primary"
-                data-testid="button-footer-support"
-              >
-                <MessageCircle className="h-5 w-5" />
+              <button onClick={() => window.open(whatsappLink, '_blank')} className="p-2.5 bg-primary/10 hover:bg-primary/20 rounded-full transition-colors">
+                <MessageCircle className="h-5 w-5 text-primary" />
               </button>
             </div>
           </div>
@@ -391,18 +423,16 @@ export default function Layout({ children }: LayoutProps) {
           <p className="text-xs text-gray-500 font-bold">
             © 2026 {appName} · جميع الحقوق محفوظة
           </p>
-          <button
-            type="button"
-            onClick={() => handleWhatsApp('967777146387')}
-            className="inline-block text-xs text-gray-500 hover:text-primary transition-colors font-medium underline underline-offset-2 cursor-pointer bg-transparent border-none p-0"
+          <a
+            href="https://wa.me/967777146387"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-gray-500 hover:text-primary transition-colors font-medium underline underline-offset-2 cursor-pointer"
           >
             تصميم وبرمجة شركة اتقان سوفت
-          </button>
+          </a>
         </div>
       </footer>
-
-      {/* Reusable Contact Support Modal */}
-      <ContactSupportModal open={supportOpen} onOpenChange={setSupportOpen} />
 
       {/* Floating Cart Button & Modal Drawer (Available on Mobile and Web) */}
       <CartButton />

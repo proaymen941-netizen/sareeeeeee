@@ -28,16 +28,15 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const checkPermissionStatus = async () => {
-    if ('permissions' in navigator && navigator.permissions?.query) {
+    if ('permissions' in navigator) {
       try {
         const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
         if (permission.state === 'granted') {
           setLocation(prev => ({ ...prev, hasPermission: true }));
           getCurrentLocation();
         }
-      } catch (error: any) {
-        // Permissions query may not be supported or restricted in iframe
-        console.warn('Permissions query notice:', error?.message || error);
+      } catch (error) {
+        console.error('Error checking permission:', error);
       }
     }
   };
@@ -47,7 +46,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   };
 
   const getCurrentLocation = () => {
-    if (!('geolocation' in navigator) || !navigator.geolocation) {
+    if (!('geolocation' in navigator)) {
       setLocation(prev => ({ 
         ...prev, 
         error: 'الموقع الجغرافي غير مدعوم في هذا المتصفح' 
@@ -66,22 +65,20 @@ export function LocationProvider({ children }: { children: ReactNode }) {
           error: null,
         });
       },
-      (error: GeolocationPositionError) => {
-        let errorMessage = 'تعذر الحصول على الموقع بدقة';
+      (error) => {
+        let errorMessage = 'حدث خطأ في الحصول على الموقع';
         
         switch (error.code) {
           case error.PERMISSION_DENIED:
             errorMessage = 'تم رفض الإذن للوصول للموقع';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'الموقع غير متاح حالياً';
+            errorMessage = 'الموقع غير متاح';
             break;
           case error.TIMEOUT:
             errorMessage = 'انتهت مهلة الحصول على الموقع';
             break;
         }
-
-        console.warn('LocationContext geolocation status:', errorMessage);
 
         setLocation(prev => ({
           ...prev,
@@ -91,7 +88,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         }));
       },
       {
-        enableHighAccuracy: false,
+        enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 60000
       }

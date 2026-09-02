@@ -30,7 +30,7 @@ export default function ProductDetails() {
   const [, setLocation] = useLocation();
   const { addItem } = useCart();
   const { toast } = useToast();
-  const { user, isAuthenticated, requireAuth } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string>('');
@@ -49,16 +49,12 @@ export default function ProductDetails() {
       if (!res.ok) return { isFavorite: false };
       return res.json();
     },
-    enabled: !!user?.id && !params?.id,
+    enabled: !!user?.id && !!params?.id,
   });
 
   const isFavorite = favStatus?.isFavorite || (params?.id ? isLocalMealFavorite(params.id) : false);
 
   const handleToggleFavorite = async () => {
-    if (!isAuthenticated) {
-      requireAuth('حفظ المنتج في المفضلة');
-      return;
-    }
     if (!product?.id) return;
     const isNowFav = await toggleMealFavoriteWithApi(product.id, user?.id);
     queryClient.invalidateQueries({ queryKey: ['/api/favorites/check', user?.id, product.id] });
@@ -109,11 +105,6 @@ export default function ProductDetails() {
     : 0;
 
   const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      requireAuth('إضافة المنتج إلى السلة');
-      return;
-    }
-
     // Add to cart with quantity
     for (let i = 0; i < quantity; i++) {
       addItem(product, product.restaurantId || 'unknown', 'متجر');

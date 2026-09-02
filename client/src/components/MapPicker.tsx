@@ -21,13 +21,13 @@ export function MapPicker({ onLocationSelect, defaultLocation, className = '' }:
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [address, setAddress] = useState(defaultLocation?.address || '');
 
-  // قائمة المواقع المتاحة في صنعاء
+  // محاكي الخريطة - في التطبيق الحقيقي سنستخدم Google Maps أو Mapbox
   const mockLocations: LocationData[] = [
-    { lat: 15.3694, lng: 44.1910, address: 'صنعاء، باب اليمن - المركز التاريخي', area: 'باب اليمن', city: 'صنعاء' },
-    { lat: 15.3547, lng: 44.2066, address: 'صنعاء، شارع الزبيري - وسط المدينة', area: 'شارع الزبيري', city: 'صنعاء' },
-    { lat: 15.3400, lng: 44.1947, address: 'صنعاء، حي السبعين - ميدان السبعين', area: 'السبعين', city: 'صنعاء' },
-    { lat: 15.3333, lng: 44.2167, address: 'صنعاء، شارع الستين الجنوبي', area: 'الستين', city: 'صنعاء' },
-    { lat: 15.3580, lng: 44.1750, address: 'صنعاء، حدة - شارع حدة الرئيسي', area: 'حدة', city: 'صنعاء' },
+    { lat: 24.7136, lng: 46.6753, address: 'الرياض، حي الملز', area: 'الملز', city: 'الرياض' },
+    { lat: 24.7504, lng: 46.7751, address: 'الرياض، حي العليا', area: 'العليا', city: 'الرياض' },
+    { lat: 24.6877, lng: 46.7219, address: 'الرياض، حي الورود', area: 'الورود', city: 'الرياض' },
+    { lat: 24.7760, lng: 46.7386, address: 'الرياض، حي الصحافة', area: 'الصحافة', city: 'الرياض' },
+    { lat: 24.7136, lng: 46.6753, address: 'الرياض، حي المربع', area: 'المربع', city: 'الرياض' },
   ];
 
   const getCurrentLocation = () => {
@@ -41,30 +41,21 @@ export function MapPicker({ onLocationSelect, defaultLocation, className = '' }:
             lng: position.coords.longitude,
             address: `الموقع الحالي (${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)})`,
             area: 'الموقع الحالي',
-            city: 'صنعاء'
+            city: 'الرياض'
           };
           setCurrentLocation(location);
           setSelectedLocation(location);
-          setAddress(location.address);
           onLocationSelect(location);
           setIsGettingLocation(false);
         },
-        (error: GeolocationPositionError) => {
-          console.warn('Could not get current location:', error?.message || error?.code);
-          // اختيار موقع افتراضي تلقائياً عند تعذر الوصول
-          const fallback = mockLocations[0];
-          setSelectedLocation(fallback);
-          setAddress(fallback.address);
-          onLocationSelect(fallback);
+        (error) => {
+          console.error('Error getting location:', error);
+          alert('لا يمكن الحصول على موقعك الحالي. الرجاء اختيار موقع من القائمة.');
           setIsGettingLocation(false);
-        },
-        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+        }
       );
     } else {
-      const fallback = mockLocations[0];
-      setSelectedLocation(fallback);
-      setAddress(fallback.address);
-      onLocationSelect(fallback);
+      alert('المتصفح لا يدعم خدمة تحديد الموقع');
       setIsGettingLocation(false);
     }
   };

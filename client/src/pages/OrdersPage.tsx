@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import RatingDialog from '@/components/RatingDialog';
-import { handlePhoneCall } from '@/utils/contactUtils';
 
 interface Order {
   id: string;
@@ -63,7 +62,7 @@ const CANCEL_REASONS = [
 export default function OrdersPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState<'all' | 'active' | 'completed' | 'cancelled'>('all');
   const [showRatingDialog, setShowRatingDialog] = useState(false);
@@ -80,7 +79,7 @@ export default function OrdersPage() {
 
   const { data: orders = [], isLoading, error } = useQuery<Order[]>({
     queryKey: ['orders', customerPhone, customerId],
-    enabled: isAuthenticated && !!(customerPhone || customerId),
+    enabled: !!(customerPhone || customerId),
     queryFn: async () => {
       // بناء معاملات الاستعلام بشكل آمن حتى لو كان رقم الهاتف فارغاً
       const params = new URLSearchParams();
@@ -366,45 +365,6 @@ export default function OrdersPage() {
     { id: 'cancelled', label: 'الملغية', count: displayOrders.filter(o => o.status === 'cancelled').length }
   ];
 
-  if (!authLoading && !isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-24" dir="rtl">
-        {/* رأس الصفحة */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => setLocation('/')}>
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-xl font-black text-gray-900">طلباتي</h1>
-              <p className="text-xs text-gray-500">تتبع ومراجعة سجل الطلبات</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-md mx-auto p-4 mt-6">
-          <Card className="rounded-3xl border-0 shadow-lg text-center p-6 bg-white space-y-4">
-            <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto text-primary">
-              <Package className="h-8 w-8" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-gray-900 mb-1">سجل الدخول لعرض طلباتك</h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                أنت تتصفح التطبيق حالياً كزائر. يرجى تسجيل الدخول أو إنشاء حساب جديد للوصول إلى قائمة طلباتك وتتبع مسار التوصيل المباشر.
-              </p>
-            </div>
-            <Button
-              onClick={() => setLocation('/auth')}
-              className="w-full h-12 rounded-2xl font-black bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20"
-            >
-              تسجيل الدخول / إنشاء حساب
-            </Button>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -584,7 +544,7 @@ export default function OrdersPage() {
                             variant="outline"
                             size="sm"
                             className="flex-1 border-blue-500 text-blue-500 hover:bg-blue-50"
-                            onClick={() => handlePhoneCall(order.driverPhone)}
+                            onClick={() => window.location.href = `tel:${order.driverPhone}`}
                           >
                             <Phone className="w-4 h-4 mr-1" />
                             اتصال بالسائق

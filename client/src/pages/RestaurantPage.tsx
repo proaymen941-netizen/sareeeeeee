@@ -162,7 +162,7 @@ export default function RestaurantPage() {
   const { addItem, removeItem, getItemQuantity } = useCart();
   const { toast } = useToast();
   const { getSetting } = useUiSettings();
-  const { user, isAuthenticated, requireAuth } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const appStatus = useMemo(() => {
@@ -257,10 +257,6 @@ export default function RestaurantPage() {
 
   const toggleRestFav = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!isAuthenticated) {
-      requireAuth('إضافة المتجر للمفضلة');
-      return;
-    }
     if (!id) return;
     setRestFavs(prev => {
       const next = new Set(prev);
@@ -272,10 +268,6 @@ export default function RestaurantPage() {
 
   const toggleMealFav = async (e: React.MouseEvent, itemId: string, itemName?: string) => {
     e.stopPropagation();
-    if (!isAuthenticated) {
-      requireAuth('حفظ الوجبة في المفضلة');
-      return;
-    }
     const isNowFav = await toggleMealFavoriteWithApi(itemId, user?.id);
     setMealFavs(new Set(getLocalMealFavorites()));
     
@@ -321,10 +313,6 @@ export default function RestaurantPage() {
   const isRestFav = id ? restFavs.has(id) : false;
 
   const handleAddItem = (item: MenuItem) => {
-    if (!isAuthenticated) {
-      requireAuth('إضافة منتج إلى السلة');
-      return;
-    }
     if (!orderStatus.canOrder) {
       setStoreClosedMsg(orderStatus.message || 'عذراً، المتجر مغلق حالياً');
       setShowStoreClosed(true);

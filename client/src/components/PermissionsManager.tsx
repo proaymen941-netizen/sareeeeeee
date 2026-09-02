@@ -425,12 +425,7 @@ export const makePhoneCall = (phoneNumber: string) => {
     const cleaned = phoneNumber.replace(/[^\d+]/g, '');
     const telUrl = `tel:${cleaned}`;
     if (typeof window !== 'undefined') {
-      const link = document.createElement('a');
-      link.href = telUrl;
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      window.location.href = telUrl;
     }
   } catch (error) {
     console.error('Error making phone call:', error);

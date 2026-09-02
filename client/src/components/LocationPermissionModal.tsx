@@ -36,8 +36,8 @@ export function LocationPermissionModal({ onPermissionGranted, onPermissionDenie
           setPermissionStatus('unknown');
           setIsOpen(true);
         }
-      } catch (error: any) {
-        console.warn('Could not query geolocation permission:', error?.message || error);
+      } catch (error) {
+        console.error('Error checking permission:', error);
         setIsOpen(true);
       }
     } else {
@@ -53,22 +53,18 @@ export function LocationPermissionModal({ onPermissionGranted, onPermissionDenie
           onPermissionGranted(position);
           setIsOpen(false);
         },
-        (error: GeolocationPositionError) => {
-          console.warn('Geolocation unavailable or denied:', error.message || error.code);
+        (error) => {
+          console.error('Error getting location:', error);
           setPermissionStatus('denied');
           onPermissionDenied();
           setIsOpen(false);
         },
         {
-          enableHighAccuracy: false,
+          enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 60000
         }
       );
-    } else {
-      setPermissionStatus('denied');
-      onPermissionDenied();
-      setIsOpen(false);
     }
   };
 

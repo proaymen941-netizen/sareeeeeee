@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useUiSettings } from '@/context/UiSettingsContext';
-import { handlePhoneCall, handleWhatsApp } from '@/utils/contactUtils';
 
 export default function AboutPage() {
   const [, setLocation] = useLocation();
@@ -144,33 +143,33 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent className="p-4 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={() => handlePhoneCall(phone)}
-                className="flex items-center gap-2.5 p-3 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all text-xs font-medium text-gray-800 text-right w-full"
+              <a
+                href={`tel:${phone}`}
+                className="flex items-center gap-2.5 p-3 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all text-xs font-medium text-gray-800"
               >
-                <div className="p-2 bg-blue-100 text-blue-700 rounded-lg shrink-0">
+                <div className="p-2 bg-blue-100 text-blue-700 rounded-lg">
                   <Phone className="h-4 w-4" />
                 </div>
-                <div className="min-w-0">
+                <div>
                   <span className="block text-[10px] text-gray-500">الاتصال المباشر</span>
-                  <span className="font-bold dir-ltr block truncate">{phone}</span>
+                  <span className="font-bold dir-ltr">{phone}</span>
                 </div>
-              </button>
+              </a>
 
-              <button
-                type="button"
-                onClick={() => handleWhatsApp(whatsapp)}
-                className="flex items-center gap-2.5 p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all text-xs font-medium text-gray-800 text-right w-full"
+              <a
+                href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2.5 p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all text-xs font-medium text-gray-800"
               >
-                <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg shrink-0">
+                <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
                   <MessageCircle className="h-4 w-4" />
                 </div>
-                <div className="min-w-0">
+                <div>
                   <span className="block text-[10px] text-gray-500">واتساب الدعم</span>
-                  <span className="font-bold dir-ltr block truncate">{whatsapp}</span>
+                  <span className="font-bold dir-ltr">{whatsapp}</span>
                 </div>
-              </button>
+              </a>
 
               <a
                 href={`mailto:${email}`}

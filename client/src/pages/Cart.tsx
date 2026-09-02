@@ -45,7 +45,7 @@ export default function Cart() {
   const { state, removeItem, updateQuantity, clearCart, setDeliveryFee } = useCart();
   const { items, subtotal, total, deliveryFee, restaurantId } = state;
   const { toast } = useToast();
-  const { user, isAuthenticated, requireAuth } = useAuth();
+  const { user } = useAuth();
   const { location: userLocation } = useUserLocation();
   const { isOnline } = useNetworkStatus();
 
@@ -277,11 +277,6 @@ export default function Cart() {
   });
 
   const handlePlaceOrder = () => {
-    if (!isAuthenticated) {
-      requireAuth('إتمام وتأكيد الطلب');
-      return;
-    }
-
     if (!isOnline) {
       toast({
         title: "لا يوجد اتصال بالإنترنت",

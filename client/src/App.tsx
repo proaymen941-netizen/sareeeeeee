@@ -10,7 +10,6 @@ import { LocationProvider, useUserLocation } from "./context/LocationContext";
 import { UiSettingsProvider, useUiSettings } from "./context/UiSettingsContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { LocationPermissionModal } from "./components/LocationPermissionModal";
-import { GuestAuthModal } from "./components/GuestAuthModal";
 import Layout from "./components/Layout";
 import FloatingCartNotification from "./components/FloatingCartNotification";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
@@ -44,8 +43,11 @@ function MainApp() {
   const [showSplash, setShowSplash] = useState(() => {
     return !sessionStorage.getItem('splash_seen');
   });
+  const [isGuest, setIsGuest] = useState(() => {
+    return localStorage.getItem('is_guest') === 'true';
+  });
 
-  const { isAuthenticated, user, isGuest } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   // Pre-warm caches on cold start (covers users who already saw splash this session)
   useEffect(() => {
@@ -113,7 +115,6 @@ function MainApp() {
         <Router />
       </Layout>
       <FloatingCartNotification />
-      <GuestAuthModal />
       
       {showLocationModal && !userLocation.hasPermission && (
         <LocationPermissionModal

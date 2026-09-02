@@ -9,8 +9,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DriverCommunication } from '@/components/DriverCommunication';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useUiSettings } from '@/context/UiSettingsContext';
-import { handleWhatsApp } from '@/utils/contactUtils';
 
 interface OrderStatus {
   id: string;
@@ -45,9 +43,6 @@ export default function OrderTracking() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { getSetting } = useUiSettings();
-
-  const supportWhatsapp = getSetting('support_whatsapp') || getSetting('about_app_whatsapp') || '967777777777';
 
   // Fetch real order data
   const { data: order, isLoading: isOrderLoading, error: orderError, refetch: refetchOrder } = useQuery<OrderDetails>({
@@ -386,7 +381,7 @@ export default function OrderTracking() {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => handleWhatsApp(supportWhatsapp)}
+            onClick={() => window.open('https://wa.me/967770000000', '_blank')}
             data-testid="button-contact-support"
           >
             تواصل مع الدعم

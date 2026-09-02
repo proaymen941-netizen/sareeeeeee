@@ -16,12 +16,12 @@ export const GuestAuthModal: React.FC = () => {
   const [, setLocation] = useLocation();
 
   const handleGoToAuth = () => {
-    closeAuthModal();
+    closeAuthModal?.();
     setLocation('/auth');
   };
 
   return (
-    <Dialog open={authModalOpen} onOpenChange={(open) => !open && closeAuthModal()}>
+    <Dialog open={Boolean(authModalOpen)} onOpenChange={(open) => !open && closeAuthModal?.()}>
       <DialogContent className="sm:max-w-md w-[92vw] max-w-lg rounded-3xl p-0 overflow-hidden border-0 shadow-2xl bg-white" dir="rtl">
         {/* Top Header Banner */}
         <div className="relative bg-gradient-to-br from-[#E03A0E] via-[#F05215] to-[#FF7840] p-6 text-white text-center">

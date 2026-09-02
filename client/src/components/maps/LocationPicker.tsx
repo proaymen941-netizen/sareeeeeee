@@ -69,7 +69,6 @@ export default function LocationPicker({
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
 
   // المركز الافتراضي (صنعاء، اليمن)
   const defaultCenter: [number, number] = [15.3694, 44.1910];
@@ -146,27 +145,26 @@ export default function LocationPicker({
   // Get current location
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setSearchError('خدمة تحديد الموقع غير مدعومة في هذا المتصفح');
+      alert('المتصفح لا يدعم خدمة تحديد الموقع');
       return;
     }
 
     setGettingLocation(true);
-    setSearchError(null);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
         const newPos: [number, number] = [lat, lng];
         setPosition(newPos);
         setMapCenter(newPos);
         setGettingLocation(false);
       },
-      (error: GeolocationPositionError) => {
-        console.warn('Geolocation error:', error?.message || error?.code);
-        setSearchError('تعذر تحديد موقعك الحالي تلقائياً. يمكنك النقر على الخريطة لتحديد الموقع.');
+      (error) => {
+        console.error('Error getting location:', error);
+        alert('فشل في الحصول على موقعك الحالي');
         setGettingLocation(false);
       },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
@@ -174,7 +172,7 @@ export default function LocationPicker({
     if (position && address) {
       onLocationSelect(position[0], position[1], address);
     } else {
-      setSearchError('الرجاء اختيار موقع على الخريطة أولاً');
+      alert('الرجاء اختيار موقع على الخريطة');
     }
   };
 
@@ -238,18 +236,6 @@ export default function LocationPicker({
               <span className="hidden sm:inline">بحث</span>
             </button>
           </form>
-          {searchError && (
-            <div className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 font-medium flex items-center justify-between">
-              <span>{searchError}</span>
-              <button 
-                type="button" 
-                onClick={() => setSearchError(null)} 
-                className="text-amber-600 hover:text-amber-800 text-xs px-1"
-              >
-                ✕
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Map Container */}

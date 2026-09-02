@@ -12,7 +12,6 @@ import RatingDialog from '@/components/RatingDialog';
 import { DriverCommunication } from '@/components/DriverCommunication';
 import MapComponent from '@/components/maps/MapComponent';
 import { useToast } from '@/hooks/use-toast';
-import { handleWhatsApp, handlePhoneCall } from '@/utils/contactUtils';
 
 interface OrderStatus {
   id: string;
@@ -484,7 +483,7 @@ export default function OrderTrackingPage() {
             <Button 
               variant="outline" 
               className="w-full flex items-center justify-center gap-2 border-green-600 text-green-600 hover:bg-green-50"
-              onClick={() => handleWhatsApp(supportWhatsapp)}
+              onClick={() => window.open(supportWhatsapp, '_blank')}
               data-testid="button-whatsapp-support"
             >
               <MessageCircle className="h-4 w-4" />
@@ -493,7 +492,7 @@ export default function OrderTrackingPage() {
             <Button 
               variant="outline" 
               className="w-full flex items-center justify-center gap-2 border-blue-600 text-blue-600 hover:bg-blue-50"
-              onClick={() => handlePhoneCall(supportPhone)}
+              onClick={() => window.location.href = supportPhone}
               data-testid="button-call-support"
             >
               <Phone className="h-4 w-4" />

@@ -31,18 +31,17 @@ export function LocationPermissionModal({ onPermissionGranted, onPermissionDenie
           getCurrentLocation();
         } else if (permission.state === 'denied') {
           setPermissionStatus('denied');
-          setIsOpen(false);
+          setIsOpen(true);
         } else {
           setPermissionStatus('unknown');
-          setIsOpen(false);
+          setIsOpen(true);
         }
       } catch (error) {
-        // Permissions policy or query error - do not prompt or log error
-        setPermissionStatus('denied');
-        setIsOpen(false);
+        console.error('Error checking permission:', error);
+        setIsOpen(true);
       }
     } else {
-      setIsOpen(false);
+      setIsOpen(true);
     }
   };
 
@@ -55,7 +54,7 @@ export function LocationPermissionModal({ onPermissionGranted, onPermissionDenie
           setIsOpen(false);
         },
         (error) => {
-          console.error('Error getting location:', error.message || error.code || error);
+          console.error('Error getting location:', error);
           setPermissionStatus('denied');
           onPermissionDenied();
           setIsOpen(false);

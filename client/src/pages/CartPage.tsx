@@ -386,19 +386,6 @@ export default function CartPage() {
   });
 
   const handlePlaceOrder = () => {
-    const isGuest = localStorage.getItem('is_guest') === 'true';
-    if (isGuest || !localStorage.getItem('auth_token')) {
-      toast({
-        title: "التسجيل مطلوب لإتمام الطلب 🔒",
-        description: "عذراً، يجب تسجيل الدخول أو إنشاء حساب لتأكيد وإتمام الطلب.",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        setLocation('/auth');
-      }, 1200);
-      return;
-    }
-
     if (!canPlaceOrder) {
       if (!appStatus.isOpen) {
         setAppClosedMessage(appStatus.message);

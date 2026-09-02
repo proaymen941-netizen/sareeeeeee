@@ -214,22 +214,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addItem = async (item: MenuItem, restaurantId: string, restaurantName: string) => {
-    // فحص ما إذا كان المستخدم زائراً غير مسجل
-    const isGuest = localStorage.getItem('is_guest') === 'true';
-    const authToken = localStorage.getItem('auth_token');
-
-    if (isGuest || !authToken) {
-      toast({
-        title: "التسجيل مطلوب 🔒",
-        description: "عذراً، يجب تسجيل الدخول أو إنشاء حساب لإضافة منتجات إلى السلة والمتابعة.",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 1200);
-      return;
-    }
-
     // 1. فحص حالة التطبيق العامة
     if (!appStatus.isOpen) {
       toast({

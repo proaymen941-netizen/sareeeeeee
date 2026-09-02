@@ -22,10 +22,6 @@ interface AuthState {
 
 // نوع السياق
 interface AuthContextType extends AuthState {
-  authModalOpen?: boolean;
-  authModalAction?: string;
-  openAuthModal?: (action?: string) => void;
-  closeAuthModal?: () => void;
   login: (identifier: string, password: string, userType?: 'customer' | 'driver' | 'admin') => Promise<{ success: boolean; message: string }>;
   register: (userData: any) => Promise<{ success: boolean; message: string }>;
   sendOtp: (phone: string, purpose?: string) => Promise<{
@@ -38,7 +34,6 @@ interface AuthContextType extends AuthState {
     disabled?: boolean;
   }>;
   verifyOtp: (phone: string, code: string) => Promise<{ success: boolean; message: string }>;
-  resetPassword: (phone: string, code: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -60,18 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     token: null,
     loading: true,
   });
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalAction, setAuthModalAction] = useState('');
-
-  const openAuthModal = (action?: string) => {
-    setAuthModalAction(action || '');
-    setAuthModalOpen(true);
-  };
-
-  const closeAuthModal = () => {
-    setAuthModalOpen(false);
-    setAuthModalAction('');
-  };
 
   // التحقق من الجلسة المحفوظة عند بدء التطبيق
   useEffect(() => {
@@ -165,7 +148,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (response.ok && result.success) {
         localStorage.setItem('auth_token', result.token);
-        localStorage.removeItem('is_guest');
         // حفظ رقم الهاتف لاستخدامه في جلب الطلبات والإشعارات
         if (result.user?.phone) {
           localStorage.setItem('customer_phone', result.user.phone);
@@ -204,7 +186,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (response.ok && result.success) {
         localStorage.setItem('auth_token', result.token);
-        localStorage.removeItem('is_guest');
         // حفظ رقم الهاتف لاستخدامه في جلب الطلبات والإشعارات
         if (result.user?.phone) {
           localStorage.setItem('customer_phone', result.user.phone);
@@ -257,21 +238,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const resetPassword = async (phone: string, code: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
-    try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code, newPassword }),
-      });
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      console.error('خطأ في إعادة تعيين كلمة المرور:', error);
-      return { success: false, message: 'تعذر الاتصال بالخادم لإعادة تعيين كلمة المرور' };
-    }
-  };
-
   const logout = async () => {
     try {
       const token = authState.token;
@@ -300,15 +266,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value: AuthContextType = {
     ...authState,
-    authModalOpen,
-    authModalAction,
-    openAuthModal,
-    closeAuthModal,
     login,
     register,
     sendOtp,
     verifyOtp,
-    resetPassword,
     logout,
     refreshUser,
   };

@@ -36,7 +36,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
           getCurrentLocation();
         }
       } catch (error) {
-        console.error('Error checking permission:', error);
+        // Suppress permissions policy / query errors silently
       }
     }
   };

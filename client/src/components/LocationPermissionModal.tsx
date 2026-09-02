@@ -31,17 +31,18 @@ export function LocationPermissionModal({ onPermissionGranted, onPermissionDenie
           getCurrentLocation();
         } else if (permission.state === 'denied') {
           setPermissionStatus('denied');
-          setIsOpen(true);
+          setIsOpen(false);
         } else {
           setPermissionStatus('unknown');
-          setIsOpen(true);
+          setIsOpen(false);
         }
       } catch (error) {
-        console.error('Error checking permission:', error);
-        setIsOpen(true);
+        // Permissions policy or query error - do not prompt or log error
+        setPermissionStatus('denied');
+        setIsOpen(false);
       }
     } else {
-      setIsOpen(true);
+      setIsOpen(false);
     }
   };
 
